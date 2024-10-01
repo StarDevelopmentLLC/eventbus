@@ -36,8 +36,24 @@ public class SimpleEventBus implements EventBus {
         public EventHandler(Object listener) {
             this.listener = listener;
 
-            for (Method method : listener.getClass().getDeclaredMethods()) {
-                if (method.isAnnotationPresent(SubscribeEvent.class)) {
+            Class<?> listenerClass = listener.getClass();
+            boolean fullClassListener = listenerClass.isAnnotationPresent(SubscribeEvent.class);
+            if (!fullClassListener) {
+                Class<?> superclass = listenerClass.getSuperclass();
+                if (superclass != null && superclass.isAnnotationPresent(SubscribeEvent.class)) {
+                    fullClassListener = true;
+                }
+
+                for (Class<?> superInterface : listenerClass.getInterfaces()) {
+                    if (superInterface.isAnnotationPresent(SubscribeEvent.class)) {
+                        fullClassListener = true;
+                        break;
+                    }
+                }
+            }
+
+            for (Method method : listenerClass.getDeclaredMethods()) {
+                if (fullClassListener || method.isAnnotationPresent(SubscribeEvent.class)) {
                     Parameter[] parameters = method.getParameters();
                     if (parameters.length == 1) {
                         if (Event.class.isAssignableFrom(parameters[0].getType())) {
