@@ -28,7 +28,12 @@ public class SimpleEventBus implements EventBus {
         }
         handlers.add(new EventHandler(listener));
     }
-    
+
+    @Override
+    public void removeListener(Object object) {
+        this.handlers.removeIf(handler -> handler.getListener().equals(object));
+    }
+
     static class EventHandler {
         private Object listener;
         private Map<Class<? extends Event>, Method> handlerMethods = new HashMap<>();
