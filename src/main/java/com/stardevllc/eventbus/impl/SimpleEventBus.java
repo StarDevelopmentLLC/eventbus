@@ -20,7 +20,7 @@ public class SimpleEventBus implements EventBus {
     }
 
     @Override
-    public void registerListener(Object listener) {
+    public void subscribe(Object listener) {
         for (EventHandler handler : handlers) {
             if (handler.getListener().equals(listener)) {
                 return;
@@ -30,7 +30,7 @@ public class SimpleEventBus implements EventBus {
     }
 
     @Override
-    public void removeListener(Object object) {
+    public void unsubscribe(Object object) {
         this.handlers.removeIf(handler -> handler.getListener().equals(object));
     }
 
