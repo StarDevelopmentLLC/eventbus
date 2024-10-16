@@ -1,6 +1,5 @@
 package com.stardevllc.eventbus.impl;
 
-import com.stardevllc.eventbus.Event;
 import com.stardevllc.eventbus.EventBus;
 import com.stardevllc.eventbus.SubscribeEvent;
 
@@ -8,25 +7,25 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
 
-public class SimpleEventBus implements EventBus {
-    
-    private Set<EventHandler> handlers = new HashSet<>();
-    
+public class SimpleEventBus<E> implements EventBus<E> {
+
+    private Set<EventHandler<E>> handlers = new HashSet<>();
+
     @Override
-    public void post(Event event) {
-        for (EventHandler handler : handlers) {
+    public void post(E event) {
+        for (EventHandler<E> handler : handlers) {
             handler.handle(event);
         }
     }
 
     @Override
     public void subscribe(Object listener) {
-        for (EventHandler handler : handlers) {
+        for (EventHandler<E> handler : handlers) {
             if (handler.getListener().equals(listener)) {
                 return;
             }
         }
-        handlers.add(new EventHandler(listener));
+        handlers.add(new EventHandler<>(listener));
     }
 
     @Override
@@ -34,10 +33,10 @@ public class SimpleEventBus implements EventBus {
         this.handlers.removeIf(handler -> handler.getListener().equals(object));
     }
 
-    static class EventHandler {
+    static class EventHandler<E> {
         private Object listener;
-        private Map<Class<? extends Event>, Method> handlerMethods = new HashMap<>();
-        
+        private Map<Class<? extends E>, Method> handlerMethods = new HashMap<>();
+
         public EventHandler(Object listener) {
             this.listener = listener;
 
@@ -61,10 +60,10 @@ public class SimpleEventBus implements EventBus {
                 if (fullClassListener || method.isAnnotationPresent(SubscribeEvent.class)) {
                     Parameter[] parameters = method.getParameters();
                     if (parameters.length == 1) {
-                        if (Event.class.isAssignableFrom(parameters[0].getType())) {
-                            method.setAccessible(true);
-                            handlerMethods.put((Class<? extends Event>) parameters[0].getType(), method);
-                        }
+                        method.setAccessible(true);
+                        try {
+                            handlerMethods.put((Class<? extends E>) parameters[0].getType(), method);
+                        } catch (Exception e) {}
                     }
                 }
             }
@@ -74,8 +73,8 @@ public class SimpleEventBus implements EventBus {
             return listener;
         }
 
-        public void handle(Event event) {
-            for (Class<? extends Event> parameterClazz : handlerMethods.keySet()) {
+        public void handle(Object event) {
+            for (Class<?> parameterClazz : handlerMethods.keySet()) {
                 if (parameterClazz.isAssignableFrom(event.getClass())) {
                     Method method = handlerMethods.get(parameterClazz);
                     try {
