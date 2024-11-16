@@ -7,10 +7,6 @@ repositories {
     mavenCentral()
 }
 
-jar {
-//    destinationDirectory.set(file("$rootProject.projectDir/build/libs"))
-}
-
 publishing {
     publications {
         maven(MavenPublication) {
